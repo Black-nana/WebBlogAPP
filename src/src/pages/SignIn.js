@@ -6,13 +6,22 @@ import { TbLockAccess } from "react-icons/tb";
 import { IoMdCloseCircle } from "react-icons/io";
 import { Link,useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Snackbar } from '@mui/material';
+import Alert from '@mui/material/Alert';
 
 const SignIn = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   const{login} = useAuth();
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -22,7 +31,7 @@ const SignIn = () => {
     validationSchema: Yup.object({
       email: Yup.string().email("Invalid email address").required("Required"),
       password: Yup.string()
-        .min(4, "Password must be at least 8 characters")
+        .min(4, "Password must be at least 4 characters")
         .required("Required"),
     }),
     onSubmit: async (values) => {
@@ -34,10 +43,11 @@ const SignIn = () => {
         
         setSuccessMessage("Successfully logged in!");
         formik.resetForm();
+        setOpenSnackbar(true);
         setTimeout(() => {
           setSuccessMessage(null);
           // Redirect the user to the home page after successful login
-          Navigate("/");
+          navigate("/");
         }, 5000);
       } catch (error) {
         setErrorMessage(error.message);
@@ -52,6 +62,17 @@ const SignIn = () => {
 
   return (
     <div className="grid grid-cols-2 p-4 shadow-2xl">
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success">
+          {successMessage}
+          {errorMessage}
+        </Alert>
+      </Snackbar>
       <div className="h-full relative ">
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <img src={img2} alt="" className="h-screen w-full object-cover" />
@@ -72,22 +93,7 @@ const SignIn = () => {
               <TbLockAccess className="text-5xl text-gray-600" />
             </span>
           </div>
-          {/* successMessage */}
-          <div>
-            {successMessage && (
-              <div className="text-white bg-green-300 p-2 mt-2 rounded">
-                {successMessage}
-              </div>
-            )}
-          </div>
-          {/* errorMessage */}
-          <div>
-            {errorMessage && (
-              <div className="text-red-600 bg-red-100 p-2 mt-2 rounded">
-                {errorMessage}
-              </div>
-            )}
-          </div>
+         
           <form
             onSubmit={formik.handleSubmit}
             className="form-control w-full grid place-items-center"
